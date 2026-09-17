@@ -21,7 +21,7 @@ struct Run: Decodable, Identifiable {
     let id: String; let capture_id: String?; let baseline_capture_id: String?
     let status: String; let changed: Int; let change_pct: Double?; let created_at: String; let detail: String?
 }
-struct MonitorDetail: Decodable { let runs: [Run] }
+struct MonitorDetail: Decodable { let runs: [Run]; let status: String?; let frequency: String? }
 struct APIProblem: Decodable { struct Detail: Decodable { let type: String; let message: String }; let error: Detail }
 struct APIError: LocalizedError { let status: Int; let message: String; var errorDescription: String? { message } }
 struct Acknowledgment: Decodable {}

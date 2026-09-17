@@ -145,6 +145,8 @@ struct MonitorAlbumView: View {
             let detail: MonitorDetail = try await store.api.request("/api/watches/\(monitor.id)")
             let album: ListResponse<Capture> = try await store.api.request("/api/captures?collection=monitors&watch_id=\(monitor.id)&limit=100")
             runs = detail.runs; shots = album.data; loaded = true
+            if let currentStatus = detail.status { status = currentStatus }
+            if let currentFrequency = detail.frequency { frequency = currentFrequency }
         } catch { self.error = error.localizedDescription }
     }
     private func action(_ action: String, newFrequency: String? = nil) async {
