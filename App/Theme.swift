@@ -4,7 +4,9 @@ enum Palette {
     static let ink = Color(red: 0.09, green: 0.13, blue: 0.25)
     static let coral = Color(red: 0.97, green: 0.39, blue: 0.29)
     static let blue = Color(red: 0.23, green: 0.39, blue: 0.91)
-    static let canvas = Color(uiColor: .systemGroupedBackground)
+    static let canvas = Color(uiColor: UIColor { traits in
+        traits.userInterfaceStyle == .dark ? .systemGroupedBackground : UIColor(red: 0.98, green: 0.97, blue: 0.95, alpha: 1)
+    })
     static let card = Color(uiColor: .secondarySystemGroupedBackground)
 }
 struct PrimaryButton: ButtonStyle {

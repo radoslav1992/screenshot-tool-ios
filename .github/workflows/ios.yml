@@ -20,4 +20,11 @@ jobs:
         shell: bash
         run: |
           DEVICE_ID=$(xcrun simctl list devices available -j | python3 -c 'import json,sys; d=json.load(sys.stdin); print(next(x["udid"] for devices in d["devices"].values() for x in devices if "iPhone" in x["name"]))')
-          xcodebuild -project EasyCapture.xcodeproj -scheme EasyCapture -destination "platform=iOS Simulator,id=$DEVICE_ID" CODE_SIGNING_ALLOWED=NO test
+          xcodebuild -project EasyCapture.xcodeproj -scheme EasyCapture -destination "platform=iOS Simulator,id=$DEVICE_ID" -resultBundlePath TestResults.xcresult CODE_SIGNING_ALLOWED=NO test
+      - name: Save native test results and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-test-results
+          path: TestResults.xcresult
+          if-no-files-found: ignore

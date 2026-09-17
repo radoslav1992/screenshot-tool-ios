@@ -32,7 +32,7 @@ Never commit signing certificates, provisioning profiles, App Store Connect keys
 
 The app uses the production origin defined in `App/API.swift`; no backend is deployed by this repository.
 
-The matching update to `radoslav1992/screenshot-tool` adds:
+The matching backend commit [`fa8b477`](https://github.com/radoslav1992/screenshot-tool/commit/fa8b477e431d1ab7e4a92d9c8df11881ed64da06) adds:
 
 - `GET /api/mobile/profile`: authenticated user, plan, verification status, quota and allowed schedules.
 - `GET /api/captures?collection=regular&limit=30&offset=0`: manual library.
@@ -51,7 +51,7 @@ Projects, team reporting, advanced monitor rules and bulk imports remain web fea
 
 ## Validation and App Store release
 
-GitHub Actions builds app + extension and runs contract tests on an available iPhone simulator. Linux cannot type-check SwiftUI or run Xcode, so the macOS CI result is the native build gate.
+GitHub Actions builds app + extension and runs contract tests and a native registration-screen UI smoke test on an available iPhone simulator. The test result bundle includes a screen capture and is uploaded as a workflow artifact. Linux cannot type-check SwiftUI or run Xcode, so the macOS CI result is the native build gate.
 
 Before TestFlight/App Review, test with a real account on a signed device: registration → verify email → capture → save/share → create monitor → pause/resume → comparison → logout/relaunch → deletion using a disposable account. Check airplane mode and expired sessions, large text and dark appearance. Do not delete a real customer account during testing.
 
