@@ -2,6 +2,7 @@ import SwiftUI
 
 struct HomeView: View {
     @EnvironmentObject private var store: AppStore
+    @ObservedObject private var push = PushNotifications.shared
     @State private var tab = 0
     @State private var compose = false
     var body: some View {
@@ -10,8 +11,11 @@ struct HomeView: View {
             NavigationStack { LibraryView() }.tabItem { Label("Library", systemImage: "rectangle.stack") }.tag(1)
             NavigationStack { MonitorsView() }.tabItem { Label("Monitors", systemImage: "waveform.path") }.tag(2)
             NavigationStack { AccountView() }.tabItem { Label("You", systemImage: "person.crop.circle") }.tag(3)
-        }.task { await store.refresh(); if !store.incomingURL.isEmpty { compose = true } }
+        }.task { await store.refresh(); await push.refresh(); if !store.incomingURL.isEmpty { compose = true } }
             .onChange(of: store.incomingURL) { _, value in if !value.isEmpty { compose = true } }
+            .sheet(isPresented: Binding(get: { push.targetWatchID != nil }, set: { if !$0 { push.targetWatchID = nil } })) {
+                if let id = push.targetWatchID { PushDestinationView(watchID: id) }
+            }
             .sheet(isPresented: $compose, onDismiss: { store.incomingURL = "" }) { CaptureComposer(initialURL: store.incomingURL) }
     }
 }

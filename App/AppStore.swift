@@ -12,7 +12,7 @@ import SwiftUI
     @Published var incomingURL = ""
     private var offset = 0
     init() { api.onUnauthorized = { [weak self] in self?.reset() } }
-    func reset() { signedIn = false; profile = nil; captures = []; monitors = []; offset = 0; canLoadMore = false }
+    func reset() { PushNotifications.shared.stopLocal(); signedIn = false; profile = nil; captures = []; monitors = []; offset = 0; canLoadMore = false }
     func authenticate(email: String, password: String, name: String, register: Bool) async {
         busy = true; defer { busy = false }
         do {
@@ -39,7 +39,7 @@ import SwiftUI
     }
     func logout() async {
         do { let _: Acknowledgment = try await api.request("/api/auth/logout", method: "POST", body: [:]) }
-        catch { self.error = "Signed out on this device. The server session could not be revoked; it will expire automatically." }
+        catch { self.error = "Could not sign out securely. Please reconnect and try again."; return }
         SessionVault.clear(); reset()
     }
 }

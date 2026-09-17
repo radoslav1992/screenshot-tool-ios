@@ -45,7 +45,7 @@ Existing login/signup, capture, watch and account deletion endpoints are reused.
 
 This is a free companion, with no checkout, prices, upgrade buttons or purchase prompts. Purchases made independently on the website update the account used by this app. Regional upgrade-link support is not enabled in this release.
 
-**Push notifications are not implemented in this version.** Email alerts continue through the existing monitor backend. Push needs a signed Apple app, APNs credentials, authenticated device registration/removal, server delivery and invalid-token handling; it must not be represented as working before these exist. No dummy permission prompt is shown.
+**Push notifications are implemented.** Follow [PUSH_SETUP.md](PUSH_SETUP.md) to enable the App ID capability, run the migration and configure APNs secrets. The account screen offers explicit opt-in, disable and iOS Settings controls. Tapping an alert opens its monitor album. Email alerts remain independent. Live APNs delivery must be checked on a signed device after setup.
 
 Projects, team reporting, advanced monitor rules and bulk imports remain web features. Existing monitors using advanced rules can be viewed and controlled, but the mobile create form creates visual monitors.
 

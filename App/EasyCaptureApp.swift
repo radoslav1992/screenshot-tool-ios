@@ -1,6 +1,7 @@
 import SwiftUI
 
 @main struct EasyCaptureApp: App {
+    @UIApplicationDelegateAdaptor(PushAppDelegate.self) private var pushDelegate
     @StateObject private var store = AppStore()
     @Environment(\.scenePhase) private var scenePhase
     var body: some Scene {
@@ -11,9 +12,9 @@ import SwiftUI
                     Button("OK", role: .cancel) { store.error = nil }
                 } message: { Text(store.error ?? "") }
                 .onChange(of: scenePhase) { _, phase in
-                    if phase == .active { consumeSharedURL() }
+                    if phase == .active { consumeSharedURL(); Task { await PushNotifications.shared.refresh() } }
                 }
-                .onAppear { consumeSharedURL() }
+                .onAppear { PushNotifications.shared.connect(store); consumeSharedURL() }
                 .onOpenURL { url in
                     guard url.scheme == "easycapture", url.host == "capture",
                           let raw = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?.first(where: { $0.name == "url" })?.value,

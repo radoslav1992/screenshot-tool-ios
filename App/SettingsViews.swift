@@ -68,8 +68,7 @@ struct AccountView: View {
             } else { EmptyCard(symbol: "person.crop.circle", title: "Account details unavailable", detail: "Pull down to reconnect and load your plan.") }
             if let message { Text(message).font(.subheadline) }
             Card { VStack(alignment: .leading, spacing: 20) {
-                Label("Alerts arrive by email", systemImage: "envelope").font(.headline)
-                Text("Push notifications are not available in this version.").font(.subheadline).foregroundStyle(.secondary)
+                PushSettingsView()
                 Divider()
                 Link(destination: API.base.appendingPathComponent("privacy")) { Label("Privacy policy", systemImage: "hand.raised") }
                 Link(destination: API.base.appendingPathComponent("terms")) { Label("Terms of service", systemImage: "doc.text") }
