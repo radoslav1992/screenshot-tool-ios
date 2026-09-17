@@ -42,7 +42,7 @@ struct WelcomeView: View {
                     RoundedRectangle(cornerRadius: 36).fill(Palette.ink.gradient)
                     Circle().fill(Palette.coral).frame(width: 160, height: 160).offset(x: 180, y: -100)
                     VStack(alignment: .leading, spacing: 14) {
-                        Image(systemName: "sparkle.viewfinder").font(.system(size: 54, weight: .light))
+                        Image(systemName: "viewfinder").font(.system(size: 54, weight: .light))
                         Text("The web moves.\nKeep the moments.").font(.system(.largeTitle, design: .rounded, weight: .bold))
                         Text("Capture beautifully. Follow every change.").font(.subheadline).foregroundStyle(.white.opacity(0.75))
                     }.foregroundStyle(.white).padding(28)
