@@ -1,0 +1,8 @@
+.DS_Store
+build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+EasyCapture.xcodeproj/
+Config/Info.plist
+Config/ShareInfo.plist
