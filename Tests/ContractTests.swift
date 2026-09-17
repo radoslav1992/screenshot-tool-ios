@@ -21,6 +21,12 @@ final class ContractTests: XCTestCase {
         XCTAssertEqual(profile.usage.remaining, 488)
         XCTAssertEqual(profile.frequencies, ["daily", "weekly"])
     }
+    func testWebUpgradePromptsAreNotPresentedInCompanionApp() throws {
+        let data = Data(#"{"error":{"type":"watch_limit","message":"Delete one, or upgrade for more."}}"#.utf8)
+        let problem = try JSONDecoder().decode(APIProblem.self, from: data)
+        XCTAssertFalse(problem.error.companionMessage.contains("upgrade"))
+        XCTAssertTrue(problem.error.companionMessage.contains("monitor limit"))
+    }
     func testFirstMonitorRunHasNoBaseline() throws {
         let data = Data(#"{"runs":[{"id":"run_1","capture_id":"cap_1","baseline_capture_id":null,"status":"baseline","changed":0,"change_pct":null,"created_at":"2026-09-17T12:00:00Z","detail":null}]}"#.utf8)
         let detail = try JSONDecoder().decode(MonitorDetail.self, from: data)

@@ -49,7 +49,7 @@ final class NoRedirects: NSObject, URLSessionTaskDelegate, @unchecked Sendable {
         if http.statusCode == 401 && !path.hasPrefix("/api/auth/") { SessionVault.clear(); onUnauthorized?() }
         guard (200..<300).contains(http.statusCode) else {
             let problem = try? JSONDecoder().decode(APIProblem.self, from: data)
-            throw APIError(status: http.statusCode, message: problem?.error.message ?? "The service could not complete this request (\(http.statusCode)). Please try again.")
+            throw APIError(status: http.statusCode, message: problem?.error.companionMessage ?? "The service could not complete this request (\(http.statusCode)). Please try again.")
         }
         let result: T
         do { result = try JSONDecoder().decode(T.self, from: data) }

@@ -39,3 +39,14 @@ func validatedWebsite(_ input: String) -> URL? {
           let host = url.host, !host.isEmpty, url.user == nil, url.password == nil else { return nil }
     return url
 }
+
+// Web error wording can include upgrade prompts. Keep native plan limits neutral.
+extension APIProblem.Detail {
+    var companionMessage: String {
+        switch type {
+        case "plan_required": return "This feature or schedule is not included in your current account plan."
+        case "watch_limit": return "You have reached your account’s monitor limit. Remove an existing monitor to create another."
+        default: return message
+        }
+    }
+}
