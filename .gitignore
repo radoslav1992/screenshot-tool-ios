@@ -7,3 +7,5 @@ EasyCapture.xcodeproj/
 Config/Info.plist
 Config/ShareInfo.plist
 *.xcresult/
+
+release/screenshots/

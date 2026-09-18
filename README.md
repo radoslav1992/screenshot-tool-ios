@@ -56,3 +56,7 @@ GitHub Actions builds app + extension and runs contract tests and a native regis
 Before TestFlight/App Review, test with a real account on a signed device: registration → verify email → capture → save/share → create monitor → pause/resume → comparison → logout/relaunch → deletion using a disposable account. Check airplane mode and expired sessions, large text and dark appearance. Do not delete a real customer account during testing.
 
 Provide Apple a review account, live backend, screenshots, support URL and privacy disclosures. Review the included privacy manifests against your actual production processing and complete App Store Connect privacy labels (including account identifiers and submitted web content). App Store approval is not guaranteed by the companion model.
+
+## App Store preparation
+
+Start with [release/APP_STORE.md](release/APP_STORE.md) for copy-ready listing text, then use the linked release documents for review-account preparation, privacy answers and real screenshots. [release/REVIEW_AND_TESTS.md](release/REVIEW_AND_TESTS.md) lists the remaining release gates.
