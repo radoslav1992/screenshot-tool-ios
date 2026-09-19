@@ -39,6 +39,8 @@ struct MonitorComposer: View {
     }
 }
 struct AccountView: View {
+    @ObservedObject private var purchases = Purchases.shared
+    @State private var showPlans = false
     @EnvironmentObject private var store: AppStore
     @State private var deleting = false; @State private var busy = false
     @State private var message: String?
@@ -66,6 +68,10 @@ struct AccountView: View {
                     } }.disabled(busy)
                 } }
             } else { EmptyCard(symbol: "person.crop.circle", title: "Account details unavailable", detail: "Pull down to reconnect and load your plan.") }
+            if purchases.configuration?.available == true {
+                Button(purchases.configuration?.canPurchase == true ? "Explore Lite" : "Lite · Purchases & restoration") { showPlans = true }
+                    .buttonStyle(PrimaryButton())
+            }
             if let message { Text(message).font(.subheadline) }
             Card { VStack(alignment: .leading, spacing: 20) {
                 PushSettingsView()
@@ -76,7 +82,7 @@ struct AccountView: View {
             Button("Sign out") { Task { busy = true; await store.logout(); busy = false } }.buttonStyle(PrimaryButton()).disabled(busy)
             Button("Delete my account", role: .destructive) { deleting = true }.frame(maxWidth: .infinity)
             Text("Easy Screen Capture · Made for your pocket").font(.caption).foregroundStyle(.secondary).frame(maxWidth: .infinity)
-        }.padding(24).frame(maxWidth: 760) }.background(Palette.canvas).navigationTitle("Account").refreshable { await store.refresh() }.sheet(isPresented: $deleting) { DeleteAccountView() }
+        }.padding(24).frame(maxWidth: 760) }.background(Palette.canvas).navigationTitle("Account").refreshable { await store.refresh() }.sheet(isPresented: $deleting) { DeleteAccountView() }.sheet(isPresented: $showPlans) { PurchaseView() }
     }
 }
 struct DeleteAccountView: View {
@@ -85,7 +91,8 @@ struct DeleteAccountView: View {
     @State private var password = ""; @State private var busy = false; @State private var confirm = false; @State private var error: String?
     var body: some View {
         NavigationStack { Form {
-            Section { Text("Permanently delete your account?").font(.title2.bold()); Text("This deletes your account and captures and cancels an active subscription. This action cannot be undone.") }
+            Section { Text("Permanently delete your account?").font(.title2.bold()); Text("This permanently deletes your account and captures. Website subscriptions are canceled. Apple subscriptions must be canceled separately in your Apple Account settings before deleting your account.") }
+            Section { Link("Manage Apple subscription", destination: URL(string: "https://apps.apple.com/account/subscriptions")!) }
             Section("Confirm your identity") { SecureField("Account password", text: $password).textContentType(.password) }
             if let error { Section { Text(error).foregroundStyle(.red) } }
             Section { Button("Delete my account", role: .destructive) { confirm = true }.disabled(password.isEmpty || busy); if busy { ProgressView("Deleting account…") } }

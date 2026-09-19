@@ -8,9 +8,10 @@ settings:
     SWIFT_VERSION: '5.0'
     TARGETED_DEVICE_FAMILY: '1,2'
     MARKETING_VERSION: '1.0.0'
-    CURRENT_PROJECT_VERSION: '1'
+    CURRENT_PROJECT_VERSION: '2'
     APP_GROUP_IDENTIFIER: group.com.easyscreencapture.ios
     CODE_SIGN_STYLE: Automatic
+    DEVELOPMENT_TEAM: R4ZW9JZQ6L
 targets:
   EasyCapture:
     type: application

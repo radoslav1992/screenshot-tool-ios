@@ -12,7 +12,7 @@ import SwiftUI
     @Published var incomingURL = ""
     private var offset = 0
     init() { api.onUnauthorized = { [weak self] in self?.reset() } }
-    func reset() { PushNotifications.shared.stopLocal(); signedIn = false; profile = nil; captures = []; monitors = []; offset = 0; canLoadMore = false }
+    func reset() { Purchases.shared.stop(); PushNotifications.shared.stopLocal(); signedIn = false; profile = nil; captures = []; monitors = []; offset = 0; canLoadMore = false }
     func authenticate(email: String, password: String, name: String, register: Bool) async {
         busy = true; defer { busy = false }
         do {

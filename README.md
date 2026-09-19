@@ -39,11 +39,11 @@ The matching backend commit [`fa8b477`](https://github.com/radoslav1992/screensh
 - `GET /api/captures?collection=monitors&watch_id=...&limit=100`: owner-scoped monitor album.
 - JSON response from `POST /api/auth/logout` when the client accepts JSON; web redirects remain unchanged.
 
-Existing login/signup, capture, watch and account deletion endpoints are reused. No new database migration is needed. Promote the corresponding Cloudflare version before running the app. Existing Stripe webhooks remain the source of subscription entitlement changes.
+Existing login/signup, capture, watch and account deletion endpoints are reused. Apply backend migration 0011 before deploying this version. Stripe manages website subscriptions; Apple subscriptions are separately verified by the backend. See [IN_APP_PURCHASES.md](IN_APP_PURCHASES.md).
 
 ## Billing and release scope
 
-This is a free companion, with no checkout, prices, upgrade buttons or purchase prompts. Purchases made independently on the website update the account used by this app. Regional upgrade-link support is not enabled in this release.
+The app is free to download. Optional Lite subscriptions use StoreKit, with prices supplied by Apple, restoration, and Apple subscription management. Website subscriptions continue using Stripe. No external checkout prompts or advertising SDK are included. See [IN_APP_PURCHASES.md](IN_APP_PURCHASES.md) for required configuration and real-device tests.
 
 **Push notifications are implemented.** Follow [PUSH_SETUP.md](PUSH_SETUP.md) to enable the App ID capability, run the migration and configure APNs secrets. The account screen offers explicit opt-in, disable and iOS Settings controls. Tapping an alert opens its monitor album. Email alerts remain independent. Live APNs delivery must be checked on a signed device after setup.
 

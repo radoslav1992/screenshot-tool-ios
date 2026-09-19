@@ -71,7 +71,7 @@ Notifications are optional. Open You > Push notifications > Enable change alerts
 
 Safari extension: open a webpage in Safari, choose Share > Easy Capture, save the URL, and open the main app to review settings and capture it.
 
-Account deletion is available under You > Delete my account, with password confirmation. This permanently deletes the account and its captures. The app has no checkout or purchase prompts. The backend will remain available throughout review.
+Account deletion is available under You > Delete my account, with password confirmation. This permanently deletes the account and its captures. Optional Lite subscriptions are available through Apple under You > Explore Lite. Lite provides 500 screenshots per calendar month, no watermark, and 30-day cloud history; monitoring is not included. Restore purchases and Manage Apple subscription are on the Lite screen. New free accounts receive 20 screenshots each calendar month; existing free accounts retain their allowance. Apple subscriptions must be canceled separately before account deletion. The backend will remain available throughout review.
 
 ## Owner fields — enter only in App Store Connect
 
@@ -89,3 +89,7 @@ Account deletion is available under You > Delete my account, with password confi
 - https://developer.apple.com/app-store/review/guidelines/
 
 Screenshot instructions: [SCREENSHOTS.md](SCREENSHOTS.md).
+
+## Lite purchase disclosure
+
+Optional Lite subscriptions provide 500 screenshots per calendar month, no watermark and 30-day cloud history. Allowances reset on the first of each month in UTC with no rollover. Payment is charged to your Apple Account; subscriptions renew automatically unless canceled at least 24 hours before renewal. Manage subscriptions in Apple Account settings. Terms of Use: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/

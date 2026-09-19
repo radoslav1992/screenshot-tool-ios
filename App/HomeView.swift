@@ -11,7 +11,7 @@ struct HomeView: View {
             NavigationStack { LibraryView() }.tabItem { Label("Library", systemImage: "rectangle.stack") }.tag(1)
             NavigationStack { MonitorsView() }.tabItem { Label("Monitors", systemImage: "waveform.path") }.tag(2)
             NavigationStack { AccountView() }.tabItem { Label("You", systemImage: "person.crop.circle") }.tag(3)
-        }.task { await store.refresh(); await push.refresh(); if !store.incomingURL.isEmpty { compose = true } }
+        }.task { await store.refresh(); await Purchases.shared.connect(store); await push.refresh(); if !store.incomingURL.isEmpty { compose = true } }
             .onChange(of: store.incomingURL) { _, value in if !value.isEmpty { compose = true } }
             .sheet(isPresented: Binding(get: { push.targetWatchID != nil }, set: { if !$0 { push.targetWatchID = nil } })) {
                 if let id = push.targetWatchID { PushDestinationView(watchID: id) }
@@ -67,6 +67,8 @@ struct CaptureComposer: View {
     @EnvironmentObject private var store: AppStore
     @Environment(\.dismiss) private var dismiss
     @State private var url: String
+    @ObservedObject private var purchases = Purchases.shared
+    @State private var showPlans = false
     private let embedded: Bool
     @State private var device = "mobile"; @State private var mode = "fullpage"
     @State private var busy = false; @State private var result: Capture?; @State private var error: String?
@@ -94,12 +96,15 @@ struct CaptureComposer: View {
                 if let profile = store.profile {
                     Text("\(profile.usage.remaining) screenshots remaining").font(.caption).foregroundStyle(.secondary)
                 }
+                if let profile = store.profile, profile.usage.remaining <= 5, purchases.configuration?.canPurchase == true {
+                    Button("Need more screenshots? Explore Lite") { showPlans = true }.font(.subheadline.bold())
+                }
                 if let error { Text(error).foregroundStyle(.red) }
                 Button { Task { await capture() } } label: { HStack { if busy { ProgressView().tint(.white) }; Text(busy ? "Capturing the page…" : "Take screenshot"); if !busy { Image(systemName: "viewfinder") } } }.buttonStyle(PrimaryButton()).disabled(busy || validatedWebsite(url) == nil)
             }.padding(24) }.background(Palette.canvas).navigationTitle(embedded ? "Capture" : "New capture").navigationBarTitleDisplayMode(.inline)
                 .toolbar { if !embedded { Button("Done") { dismiss() }.disabled(busy) } }
                 .navigationDestination(item: $result) { CaptureDetailView(capture: $0) }
-        }.interactiveDismissDisabled(busy)
+        }.sheet(isPresented: $showPlans) { PurchaseView() }.interactiveDismissDisabled(busy)
     }
     private func capture() async {
         guard let target = validatedWebsite(url) else { return }; busy = true; error = nil; defer { busy = false }
