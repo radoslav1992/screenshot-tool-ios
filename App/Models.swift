@@ -4,7 +4,7 @@ struct User: Codable { let id: String; let email: String; let name: String }
 struct AuthResponse: Decodable { let user: User }
 struct ListResponse<T: Decodable>: Decodable { let data: [T] }
 struct Usage: Decodable { let used: Int; let quota: Int; let remaining: Int; let renewsOn: String }
-struct Profile: Decodable { let user: User; let plan: String; let verified: Bool; let usage: Usage; let frequencies: [String] }
+struct Profile: Decodable { let user: User; let plan: String; let verified: Bool; let usage: Usage; let frequencies: [String]; var retentionDays: Int? = nil }
 struct Capture: Decodable, Identifiable {
     let id: String; let status: String; let url: String; let display_url: String
     let device: String; let mode: String; let format: String; let source: String

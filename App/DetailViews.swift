@@ -26,12 +26,19 @@ struct CaptureDetailView: View {
                         else { ProgressView().frame(maxWidth: .infinity).frame(height: 240) }
                     }.clipShape(RoundedRectangle(cornerRadius: 20))
                 }
+                if let days = store.profile?.retentionDays {
+                    Card {
+                        Label("Cloud storage", systemImage: "icloud").font(.headline).foregroundStyle(Palette.blue)
+                        Text("Your plan keeps screenshots for \(days) days. Save a copy before it expires. Monitor baselines may be kept longer for comparisons.")
+                            .font(.subheadline).foregroundStyle(.secondary)
+                    }
+                }
                 if let error = capture.error { Text(error).foregroundStyle(.red) }
                 if !capture.images.isEmpty {
                     HStack {
                         Button { Task { await export(save: false) } } label: { Label("Share image", systemImage: "square.and.arrow.up") }
                         Spacer()
-                        Button { Task { await export(save: true) } } label: { Label("Save", systemImage: "square.and.arrow.down") }
+                        Button { Task { await export(save: true) } } label: { Label("Save to Photos", systemImage: "square.and.arrow.down") }
                     }.font(.headline).disabled(busy)
                     if capture.images.count > 1 { Text("Save and share export the first image.").font(.caption).foregroundStyle(.secondary) }
                 }

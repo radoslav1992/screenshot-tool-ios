@@ -43,6 +43,14 @@ struct LibraryView: View {
                 Eyebrow(text: "A collection of good finds")
                 Text("Your web,\nwell kept.").font(.system(.largeTitle, design: .rounded, weight: .bold))
                 Text("Manual captures live here. Scheduled screenshots stay in their monitor albums.").foregroundStyle(.secondary)
+                if let days = store.profile?.retentionDays {
+                    Card {
+                        Label("Kept for \(days) days", systemImage: "clock")
+                            .font(.headline).foregroundStyle(Palette.blue)
+                        Text("Cloud copies are automatically deleted after your plan’s retention period. Save favorites to Photos or Files to keep them.")
+                            .font(.subheadline).foregroundStyle(.secondary)
+                    }
+                }
                 if store.captures.isEmpty { EmptyCard(symbol: "rectangle.stack", title: "Room for inspiration", detail: "Tap + to capture your first website.") }
                 ForEach(store.captures.filter { search.isEmpty || $0.url.localizedCaseInsensitiveContains(search) }) { capture in
                     NavigationLink { CaptureDetailView(capture: capture) } label: { CaptureCard(capture: capture) }.buttonStyle(.plain)
