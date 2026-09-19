@@ -39,17 +39,29 @@ struct WelcomeView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 28) {
                 HStack { Image(systemName: "viewfinder").font(.title); Text("EASY CAPTURE").font(.caption.bold()).tracking(3); Spacer() }.foregroundStyle(Palette.blue)
-                ZStack(alignment: .bottomLeading) {
-                    RoundedRectangle(cornerRadius: 36).fill(Palette.ink.gradient)
-                    Circle().fill(Palette.coral).frame(width: 160, height: 160).offset(x: 180, y: -100)
-                    VStack(alignment: .leading, spacing: 14) {
-                        Image(systemName: "viewfinder").font(.system(size: 54, weight: .light))
-                        Text("The web moves.\nKeep the moments.").font(.system(.largeTitle, design: .rounded, weight: .bold))
-                        Text("Capture beautifully. Follow every change.").font(.subheadline).foregroundStyle(.white.opacity(0.75))
-                    }.foregroundStyle(.white).padding(28)
-                }.frame(height: 300).clipped().clipShape(RoundedRectangle(cornerRadius: 36)).accessibilityElement(children: .combine)
+                VStack(alignment: .leading, spacing: 18) {
+                    HStack {
+                        Label("WEBSITE SCREENSHOTS", systemImage: "camera")
+                            .font(.caption.bold()).tracking(1)
+                        Spacer()
+                        Image(systemName: "sparkle").foregroundStyle(Palette.coral)
+                    }
+                    Text("The whole page.\nIn your pocket.")
+                        .font(.system(.largeTitle, design: .rounded, weight: .bold))
+                        .fixedSize(horizontal: false, vertical: true)
+                    Text("Turn any public website into a full-page screenshot. Save it, share it, and keep it in your library.")
+                        .font(.subheadline).foregroundStyle(.white.opacity(0.85))
+                    HStack(spacing: 16) {
+                        Label("Full page", systemImage: "arrow.down.doc")
+                        Label("Save & share", systemImage: "square.and.arrow.up")
+                    }.font(.caption.weight(.semibold)).foregroundStyle(.white.opacity(0.9))
+                }
+                .foregroundStyle(.white).padding(26)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Palette.ink.gradient, in: RoundedRectangle(cornerRadius: 30))
+                .accessibilityElement(children: .combine)
                 VStack(alignment: .leading, spacing: 16) {
-                    Text(register ? "Your collection starts here." : "Welcome back.").font(.title2.bold())
+                    Text(register ? "Your first screenshot starts here." : "Sign in to start capturing.").font(.title2.bold())
                     if register { TextField("Your name", text: $name).textContentType(.name).padding().background(Palette.card, in: RoundedRectangle(cornerRadius: 14)) }
                     TextField("Email address", text: $email).textContentType(.emailAddress).keyboardType(.emailAddress).textInputAutocapitalization(.never).autocorrectionDisabled().padding().background(Palette.card, in: RoundedRectangle(cornerRadius: 14))
                     SecureField("Password", text: $password).textContentType(register ? .newPassword : .password).padding().background(Palette.card, in: RoundedRectangle(cornerRadius: 14))

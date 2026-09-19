@@ -7,7 +7,7 @@ struct HomeView: View {
     @State private var compose = false
     var body: some View {
         TabView(selection: $tab) {
-            NavigationStack { OverviewView(compose: $compose) }.tabItem { Label("Today", systemImage: "sun.max") }.tag(0)
+            CaptureComposer(initialURL: "", embedded: true).tabItem { Label("Capture", systemImage: "camera") }.tag(0)
             NavigationStack { LibraryView() }.tabItem { Label("Library", systemImage: "rectangle.stack") }.tag(1)
             NavigationStack { MonitorsView() }.tabItem { Label("Monitors", systemImage: "waveform.path") }.tag(2)
             NavigationStack { AccountView() }.tabItem { Label("You", systemImage: "person.crop.circle") }.tag(3)
@@ -17,33 +17,6 @@ struct HomeView: View {
                 if let id = push.targetWatchID { PushDestinationView(watchID: id) }
             }
             .sheet(isPresented: $compose, onDismiss: { store.incomingURL = "" }) { CaptureComposer(initialURL: store.incomingURL) }
-    }
-}
-struct OverviewView: View {
-    @EnvironmentObject private var store: AppStore
-    @Binding var compose: Bool
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                HStack { Eyebrow(text: "Your daily perspective"); Spacer(); Image(systemName: "sparkle").foregroundStyle(Palette.coral) }
-                Text("A little clarity.\nEvery day.").font(.system(.largeTitle, design: .rounded, weight: .bold))
-                VStack(alignment: .leading, spacing: 22) {
-                    HStack { Label("READY WHEN YOU ARE", systemImage: "viewfinder").font(.caption.bold()).tracking(1); Spacer() }
-                    Text("Something worth\nkeeping?").font(.system(.title, design: .rounded, weight: .bold))
-                    Button { compose = true } label: { HStack { Text("Capture a website"); Spacer(); Image(systemName: "arrow.up.right") }.font(.headline).padding(18).background(.white, in: RoundedRectangle(cornerRadius: 18)).foregroundStyle(Palette.ink) }
-                }.foregroundStyle(.white).padding(26).background(LinearGradient(colors: [Palette.ink, Palette.blue], startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: 30))
-                HStack(spacing: 14) {
-                    Card { Text("\(store.monitors.filter { $0.status == "active" }.count)").font(.largeTitle.bold()).foregroundStyle(Palette.blue); Text("Active monitors").font(.subheadline).foregroundStyle(.secondary) }
-                    Card { Text(store.profile.map { "\($0.usage.remaining)" } ?? "—").font(.largeTitle.bold()).foregroundStyle(Palette.coral); Text("Captures left").font(.subheadline).foregroundStyle(.secondary) }
-                }
-                if store.profile?.verified == false {
-                    Card { Label("Verify your email", systemImage: "envelope.badge").font(.headline); Text("Open the verification link in your inbox, then pull down to refresh.").font(.subheadline).foregroundStyle(.secondary) }
-                }
-                HStack { Text("Recently collected").font(.title2.bold()); Spacer(); NavigationLink { LibraryView() } label: { Image(systemName: "arrow.right") }.accessibilityLabel("See library") }
-                if store.captures.isEmpty { EmptyCard(symbol: "rectangle.stack.badge.plus", title: "Make your first capture", detail: "Save a page, a design, or a moment from the web.") }
-                ForEach(store.captures.prefix(3)) { capture in NavigationLink { CaptureDetailView(capture: capture) } label: { CaptureCard(capture: capture) }.buttonStyle(.plain) }
-            }.padding(22).frame(maxWidth: 760)
-        }.background(Palette.canvas).navigationTitle("Easy Capture").navigationBarTitleDisplayMode(.inline).refreshable { await store.refresh() }
     }
 }
 struct CaptureCard: View {
@@ -86,25 +59,37 @@ struct CaptureComposer: View {
     @EnvironmentObject private var store: AppStore
     @Environment(\.dismiss) private var dismiss
     @State private var url: String
-    @State private var device = "desktop"; @State private var mode = "fullpage"
+    private let embedded: Bool
+    @State private var device = "mobile"; @State private var mode = "fullpage"
     @State private var busy = false; @State private var result: Capture?; @State private var error: String?
-    init(initialURL: String) { _url = State(initialValue: initialURL) }
+    init(initialURL: String, embedded: Bool = false) {
+        _url = State(initialValue: initialURL)
+        self.embedded = embedded
+    }
     var body: some View {
         NavigationStack {
             ScrollView { VStack(alignment: .leading, spacing: 24) {
-                Eyebrow(text: "A new perspective")
-                Text("Keep something\nworth seeing.").font(.system(.largeTitle, design: .rounded, weight: .bold))
+                Eyebrow(text: "WEBSITE SCREENSHOTS")
+                Text("The whole page.\nOne screenshot.").font(.system(.largeTitle, design: .rounded, weight: .bold))
+                Text("Paste a website link to get started.").foregroundStyle(.secondary)
                 Card { VStack(alignment: .leading, spacing: 16) {
                     Text("Website address").font(.headline)
                     TextField("https://example.com", text: $url).keyboardType(.URL).textInputAutocapitalization(.never).autocorrectionDisabled().textFieldStyle(.roundedBorder)
                     Picker("Device", selection: $device) { Text("Desktop").tag("desktop"); Text("Mobile").tag("mobile"); Text("Tablet").tag("tablet") }.pickerStyle(.segmented)
                     Picker("Capture area", selection: $mode) { Text("Full page").tag("fullpage"); Text("Visible area").tag("visible") }
                 } }
-                Text("Captured securely in the cloud as a PNG. This uses your existing account allowance.").font(.subheadline).foregroundStyle(.secondary)
+                Text("Save a full webpage or just the visible area as a PNG, then download or share it. Each screenshot uses your account allowance.").font(.subheadline).foregroundStyle(.secondary)
+                if store.profile?.verified == false {
+                    Label("Verify your email before taking your first screenshot. Open You to resend the link.", systemImage: "envelope.badge")
+                        .font(.subheadline).foregroundStyle(.secondary)
+                }
+                if let profile = store.profile {
+                    Text("\(profile.usage.remaining) screenshots remaining").font(.caption).foregroundStyle(.secondary)
+                }
                 if let error { Text(error).foregroundStyle(.red) }
-                Button { Task { await capture() } } label: { HStack { if busy { ProgressView().tint(.white) }; Text(busy ? "Capturing the page…" : "Create capture"); if !busy { Image(systemName: "viewfinder") } } }.buttonStyle(PrimaryButton()).disabled(busy || validatedWebsite(url) == nil)
-            }.padding(24) }.background(Palette.canvas).navigationTitle("New capture").navigationBarTitleDisplayMode(.inline)
-                .toolbar { Button("Done") { dismiss() }.disabled(busy) }
+                Button { Task { await capture() } } label: { HStack { if busy { ProgressView().tint(.white) }; Text(busy ? "Capturing the page…" : "Take screenshot"); if !busy { Image(systemName: "viewfinder") } } }.buttonStyle(PrimaryButton()).disabled(busy || validatedWebsite(url) == nil)
+            }.padding(24) }.background(Palette.canvas).navigationTitle(embedded ? "Capture" : "New capture").navigationBarTitleDisplayMode(.inline)
+                .toolbar { if !embedded { Button("Done") { dismiss() }.disabled(busy) } }
                 .navigationDestination(item: $result) { CaptureDetailView(capture: $0) }
         }.interactiveDismissDisabled(busy)
     }
