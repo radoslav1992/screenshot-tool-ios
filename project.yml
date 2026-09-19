@@ -87,5 +87,13 @@ schemes:
       targets:
         EasyCapture: all
         CaptureShare: all
+    run:
+      config: Debug
+      executable: EasyCapture
+      askForAppToLaunch: false
+    profile:
+      config: Release
+      executable: EasyCapture
+      askForAppToLaunch: false
     test:
       targets: [EasyCaptureTests, EasyCaptureUITests]
