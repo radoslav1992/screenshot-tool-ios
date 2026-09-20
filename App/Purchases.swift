@@ -23,7 +23,7 @@ struct PurchaseAccess: Decodable { let active: Bool }
         self.store = store
         if updates == nil {
             updates = Task { [weak self] in
-                for await result in Transaction.updates {
+                for await result in StoreKit.Transaction.updates {
                     guard !Task.isCancelled else { return }
                     guard case .verified(let transaction) = result else { continue }
                     do { try await self?.deliver(transaction) }
@@ -78,7 +78,7 @@ struct PurchaseAccess: Decodable { let active: Bool }
         do {
             try await StoreKit.AppStore.sync()
             var found = false
-            for await result in Transaction.currentEntitlements {
+            for await result in StoreKit.Transaction.currentEntitlements {
                 guard case .verified(let transaction) = result, identifiers.contains(transaction.productID) else { continue }
                 try await deliver(transaction); found = true
             }
@@ -87,13 +87,13 @@ struct PurchaseAccess: Decodable { let active: Bool }
         } catch { message = error.localizedDescription }
     }
     private func syncCurrent() async {
-        for await result in Transaction.currentEntitlements {
+        for await result in StoreKit.Transaction.currentEntitlements {
             guard case .verified(let transaction) = result, identifiers.contains(transaction.productID) else { continue }
             do { try await deliver(transaction) }
             catch { message = "Could not sync a purchase. Use Restore purchases with the Easy Capture account you originally subscribed with." }
         }
     }
-    private func deliver(_ transaction: Transaction) async throws {
+    private func deliver(_ transaction: StoreKit.Transaction) async throws {
         guard identifiers.contains(transaction.productID), let store, store.signedIn else { return }
         let userID = store.profile?.user.id
         let environment: String
