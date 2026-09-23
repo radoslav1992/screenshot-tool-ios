@@ -17,6 +17,25 @@ struct PurchaseAccess: Decodable { let active: Bool }
     @Published var message: String?
     private weak var store: AppStore?
     private var updates: Task<Void, Never>?
+    private var restoreTask: Task<Void, Never>?
+    private var restoreTimeout: Task<Void, Never>?
+    private var restoreID: UUID?
+    @Published private(set) var restoring = false
+    @Published private(set) var restoreProgress = "Restoring purchases…"
+
+    func cancelRestore() {
+        guard restoreID != nil else { return }
+        finishRestore(message: "Restore stopped. You can try again when you’re ready.")
+    }
+
+    private func finishRestore(message: String?) {
+        // Invalidate first: late StoreKit completions must not change a newer attempt.
+        restoreID = nil
+        restoreTask?.cancel(); restoreTask = nil
+        restoreTimeout?.cancel(); restoreTimeout = nil
+        restoring = false; busy = false
+        self.message = message
+    }
     private let identifiers = ["com.easyscreencapture.ios.lite.monthly", "com.easyscreencapture.ios.lite.yearly"]
 
     func connect(_ store: AppStore) async {
@@ -35,6 +54,7 @@ struct PurchaseAccess: Decodable { let active: Bool }
         if configuration?.available == true { await syncCurrent() }
     }
     func stop() {
+        if restoring { finishRestore(message: nil) }
         updates?.cancel(); updates = nil; store = nil
         products = []; configuration = nil; message = nil
     }
@@ -73,18 +93,55 @@ struct PurchaseAccess: Decodable { let active: Bool }
         } catch { message = error.localizedDescription }
     }
     func restore() async {
-        guard !busy else { return }
-        busy = true; message = nil; defer { busy = false }
-        do {
-            try await StoreKit.AppStore.sync()
-            var found = false
-            for await result in StoreKit.Transaction.currentEntitlements {
-                guard case .verified(let transaction) = result, identifiers.contains(transaction.productID) else { continue }
-                try await deliver(transaction); found = true
+        guard !busy, let store, store.signedIn else { return }
+        let id = UUID()
+        restoreID = id
+        restoring = true; busy = true; message = nil
+        restoreProgress = "Connecting to the App Store…"
+        // Independent watchdog: a task group would wait for an uncooperative
+        // StoreKit child even after cancellation, leaving the UI blocked.
+        restoreTimeout = Task { [weak self] in
+            do { try await Task.sleep(nanoseconds: 45_000_000_000) }
+            catch { return }
+            guard let self, self.restoreID == id else { return }
+            self.finishRestore(message: "Restore took too long. Please check your connection and try again. Your existing subscription has not been canceled.")
+        }
+        restoreTask = Task { [weak self] in
+            guard let self else { return }
+            do {
+                try await StoreKit.AppStore.sync()
+                try Task.checkCancellation()
+                guard self.restoreID == id else { return }
+                self.restoreProgress = "Checking your purchases…"
+                var active = false
+                for await result in StoreKit.Transaction.currentEntitlements {
+                    try Task.checkCancellation()
+                    guard self.restoreID == id else { return }
+                    guard case .verified(let transaction) = result,
+                          self.identifiers.contains(transaction.productID) else { continue }
+                    self.restoreProgress = "Verifying your subscription…"
+                    let access = try await self.deliver(transaction, refreshProfile: false)
+                    active = active || access
+                }
+                try Task.checkCancellation()
+                guard self.restoreID == id else { return }
+                self.restoreProgress = "Updating your account…"
+                // Restore needs the account and eligibility, not product prices or
+                // the capture/monitor libraries. Avoid unrelated waits here.
+                let profile: Profile = try await store.api.request("/api/mobile/profile")
+                try Task.checkCancellation()
+                guard self.restoreID == id, store.signedIn else { return }
+                store.profile = profile
+                let config: PurchaseConfiguration = try await store.api.request("/api/mobile/purchases")
+                try Task.checkCancellation()
+                guard self.restoreID == id else { return }
+                self.configuration = config
+                self.finishRestore(message: active ? "Purchases restored to your account." : "No active Lite subscription was found for this Apple Account.")
+            } catch {
+                guard self.restoreID == id else { return }
+                self.finishRestore(message: error.localizedDescription)
             }
-            await load()
-            message = found ? "Purchases restored to your account." : "No active Lite subscription was found for this Apple Account."
-        } catch { message = error.localizedDescription }
+        }
     }
     private func syncCurrent() async {
         for await result in StoreKit.Transaction.currentEntitlements {
@@ -93,8 +150,10 @@ struct PurchaseAccess: Decodable { let active: Bool }
             catch { message = "Could not sync a purchase. Use Restore purchases with the Easy Capture account you originally subscribed with." }
         }
     }
-    private func deliver(_ transaction: StoreKit.Transaction) async throws {
-        guard identifiers.contains(transaction.productID), let store, store.signedIn else { return }
+    @discardableResult
+    private func deliver(_ transaction: StoreKit.Transaction, refreshProfile: Bool = true) async throws -> Bool {
+        try Task.checkCancellation()
+        guard identifiers.contains(transaction.productID), let store, store.signedIn else { throw CancellationError() }
         let userID = store.profile?.user.id
         let environment: String
         switch transaction.environment {
@@ -102,11 +161,14 @@ struct PurchaseAccess: Decodable { let active: Bool }
         case .sandbox: environment = "Sandbox"
         default: throw APIError(status: 0, message: "Use Sandbox or TestFlight purchases to test the server integration.")
         }
-        let _: PurchaseAccess = try await store.api.request("/api/mobile/purchases", method: "POST", body: ["transactionId": String(transaction.id), "environment": environment])
-        guard store.signedIn, store.profile?.user.id == userID else { return }
+        let access: PurchaseAccess = try await store.api.request("/api/mobile/purchases", method: "POST", body: ["transactionId": String(transaction.id), "environment": environment])
+        try Task.checkCancellation()
+        guard store.signedIn, store.profile?.user.id == userID else { throw CancellationError() }
         // Finish only after the server has recorded and checked this transaction.
         await transaction.finish()
-        await store.refresh()
+        try Task.checkCancellation()
+        if refreshProfile { await store.refresh() }
+        return access.active
     }
 }
 
@@ -140,7 +202,12 @@ struct PurchaseView: View {
                     } else if purchases.configuration?.available == true {
                         Text("Your account already has a paid plan. Restore an Apple purchase or manage your existing subscription below.").foregroundStyle(.secondary)
                     }
-                    if purchases.busy { ProgressView("Updating your subscription…") }
+                    if purchases.busy {
+                        ProgressView(purchases.restoring ? purchases.restoreProgress : "Updating your subscription…")
+                    }
+                    if purchases.restoring {
+                        Button("Cancel restore") { purchases.cancelRestore() }
+                    }
                     if let message = purchases.message { Text(message).font(.subheadline).foregroundStyle(.secondary) }
                     Button("Restore purchases") { Task { await purchases.restore() } }.disabled(purchases.busy)
                     Link("Manage Apple subscription", destination: URL(string: "https://apps.apple.com/account/subscriptions")!)
@@ -153,8 +220,9 @@ struct PurchaseView: View {
                     }.font(.footnote)
                 }.padding(24).frame(maxWidth: 650)
             }.background(Palette.canvas).navigationTitle("Lite").navigationBarTitleDisplayMode(.inline)
-                .toolbar { Button("Done") { dismiss() }.disabled(purchases.busy) }
+                .toolbar { Button("Done") { purchases.cancelRestore(); dismiss() }.disabled(purchases.busy && !purchases.restoring) }
                 .task { await purchases.load() }
-        }.interactiveDismissDisabled(purchases.busy)
+        }.interactiveDismissDisabled(purchases.busy && !purchases.restoring)
+            .onDisappear { purchases.cancelRestore() }
     }
 }
