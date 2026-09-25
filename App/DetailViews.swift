@@ -105,6 +105,7 @@ struct MonitorAlbumView: View {
     @State private var changedOnly = false; @State private var loading = true; @State private var busy = false
     @State private var showDelete = false; @State private var showRun = false
     @State private var status = ""; @State private var frequency = ""
+    @State private var threshold = 1.0; @State private var editThreshold = false
     @State private var error: String?; @State private var loaded = false
     var body: some View {
         ScrollView { LazyVStack(alignment: .leading, spacing: 20) {
@@ -120,14 +121,25 @@ struct MonitorAlbumView: View {
                     ForEach(frequencies, id: \.self) { value in Button(value.capitalized) { Task { await action("schedule", newFrequency: value) } } }
                 }.disabled(busy || !loaded) }
             }
+            Button { editThreshold = true } label: {
+                HStack {
+                    Text("Visual alert threshold")
+                    Spacer()
+                    Text(threshold.formatted(.number.precision(.fractionLength(0...2))) + "%")
+                    Image(systemName: "chevron.right")
+                }
+            }.disabled(busy || !loaded)
             Toggle("Only show changes", isOn: $changedOnly)
             if loading { ProgressView("Opening album…") }
             if let error { Text(error).foregroundStyle(.red); Button("Try again") { Task { await load() } } }
             if !loading && runs.isEmpty && error == nil { EmptyCard(symbol: "clock", title: "Waiting for the first check", detail: "Your first scheduled check establishes the baseline. Later checks can reveal changes.") }
             ForEach(runs.filter { !changedOnly || $0.changed == 1 }) { run in
                 VStack(alignment: .leading, spacing: 12) {
-                    HStack { Circle().fill(run.changed == 1 ? Palette.coral : Palette.blue).frame(width: 8, height: 8); Text(run.changed == 1 ? "Change detected" : run.status.capitalized).font(.headline); Spacer(); if let pct = run.change_pct { Text(String(format: "%.1f%%", pct)).font(.caption.monospacedDigit()).foregroundStyle(Palette.coral) } }
+                    HStack { Circle().fill(run.changed == 1 ? Palette.coral : Palette.blue).frame(width: 8, height: 8); Text(run.resultTitle).font(.headline); Spacer(); if let pct = run.change_pct { Text(pct.formatted(.number.precision(.fractionLength(0...2))) + "%").font(.caption.monospacedDigit()).foregroundStyle(Palette.coral) } }
                     Text(friendlyDate(run.created_at)).font(.caption).foregroundStyle(.secondary)
+                    if let detail = run.detail, !detail.isEmpty {
+                        Text(detail).font(.caption).foregroundStyle(.secondary)
+                    }
                     if let capture = shots.first(where: { $0.id == run.capture_id }) {
                         NavigationLink { CaptureDetailView(capture: capture) } label: { ShotImage(url: capture.imageURL).frame(height: 160).clipped().clipShape(RoundedRectangle(cornerRadius: 16)) }
                     }
@@ -139,7 +151,10 @@ struct MonitorAlbumView: View {
             Text("Showing up to 30 recent checks. Older history remains available on the website.").font(.caption).foregroundStyle(.secondary)
             Button("Delete monitor", role: .destructive) { showDelete = true }.disabled(busy)
         }.padding(22).frame(maxWidth: 760) }.background(Palette.canvas).navigationTitle("Album").navigationBarTitleDisplayMode(.inline)
-            .task { status = monitor.status; frequency = monitor.frequency; await load() }.refreshable { await load() }
+            .sheet(isPresented: $editThreshold) {
+                MonitorThresholdEditor(monitorID: monitor.id, threshold: threshold) { threshold = $0 }
+            }
+            .task { status = monitor.status; frequency = monitor.frequency; threshold = monitor.threshold ?? 1; await load() }.refreshable { await load() }
             .confirmationDialog("Run a check now? This uses your capture allowance.", isPresented: $showRun, titleVisibility: .visible) { Button("Run check") { Task { await action("run") } } }
             .confirmationDialog("Delete this monitor? Scheduled checks will stop.", isPresented: $showDelete, titleVisibility: .visible) { Button("Delete monitor", role: .destructive) { Task {
                 busy = true; defer { busy = false }
@@ -154,6 +169,7 @@ struct MonitorAlbumView: View {
             runs = detail.runs; shots = album.data; loaded = true
             if let currentStatus = detail.status { status = currentStatus }
             if let currentFrequency = detail.frequency { frequency = currentFrequency }
+            if let currentThreshold = detail.threshold { threshold = currentThreshold }
         } catch { self.error = error.localizedDescription }
     }
     private func action(_ action: String, newFrequency: String? = nil) async {

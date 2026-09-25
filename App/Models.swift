@@ -15,13 +15,24 @@ struct Monitor: Decodable, Identifiable {
     let id: String; let label: String; let url: String; let display_url: String
     let device: String; let frequency: String; let status: String
     let last_run_at: String?; let next_run_at: String; let last_change_pct: Double?; let last_error: String?
+    var threshold: Double? = nil
     var title: String { label.isEmpty ? display_url : label }
 }
 struct Run: Decodable, Identifiable {
     let id: String; let capture_id: String?; let baseline_capture_id: String?
     let status: String; let changed: Int; let change_pct: Double?; let created_at: String; let detail: String?
 }
-struct MonitorDetail: Decodable { let runs: [Run]; let status: String?; let frequency: String? }
+extension Run {
+    var resultTitle: String {
+        if status == "error" { return "Check failed" }
+        if status == "skipped" { return "Check skipped" }
+        if status != "done" { return status.capitalized }
+        if baseline_capture_id == nil { return "Baseline saved" }
+        if changed == 1 { return "Change detected" }
+        return change_pct == nil ? "Check completed" : "No alert triggered"
+    }
+}
+struct MonitorDetail: Decodable { let runs: [Run]; let status: String?; let frequency: String?; var threshold: Double? = nil }
 struct APIProblem: Decodable { struct Detail: Decodable { let type: String; let message: String }; let error: Detail }
 struct APIError: LocalizedError { let status: Int; let message: String; var errorDescription: String? { message } }
 struct Acknowledgment: Decodable {}

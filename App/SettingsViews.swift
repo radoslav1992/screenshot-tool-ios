@@ -4,7 +4,7 @@ struct MonitorComposer: View {
     @EnvironmentObject private var store: AppStore
     @Environment(\.dismiss) private var dismiss
     @State private var url = ""; @State private var label = ""; @State private var frequency = "daily"
-    @State private var device = "desktop"; @State private var threshold = 1.0
+    @State private var device = "desktop"; @State private var threshold = "1"
     @State private var notify = true; @State private var busy = false; @State private var error: String?
     var body: some View {
         NavigationStack {
@@ -19,21 +19,21 @@ struct MonitorComposer: View {
                     if let frequencies = store.profile?.frequencies, !frequencies.isEmpty {
                         Picker("Check", selection: $frequency) { ForEach(frequencies, id: \.self) { Text($0.capitalized).tag($0) } }
                     } else { Text("Your current plan does not include scheduled monitors.").foregroundStyle(.secondary) }
-                    VStack(alignment: .leading) { Text("Visual change threshold: \(threshold, specifier: "%.1f")%"); Slider(value: $threshold, in: 0.1...20, step: 0.1).accessibilityLabel("Visual change threshold") }
+                    MonitorThresholdFields(text: $threshold)
                     Toggle("Email me when a change is found", isOn: $notify)
                 }
                 Section { Text("The first check establishes a baseline. Each scheduled check uses your existing capture allowance. Email alerts use the address on your account.").font(.footnote).foregroundStyle(.secondary) }
                 if let error { Section { Text(error).foregroundStyle(.red) } }
-                Section { Button { Task { await create() } } label: { HStack { if busy { ProgressView() }; Text("Create monitor") } }.disabled(busy || validatedWebsite(url) == nil || (store.profile?.frequencies.isEmpty ?? true)) }
+                Section { Button { Task { await create() } } label: { HStack { if busy { ProgressView() }; Text("Create monitor") } }.disabled(busy || monitorThresholdValue(threshold) == nil || validatedWebsite(url) == nil || (store.profile?.frequencies.isEmpty ?? true)) }
             }.navigationTitle("New monitor").navigationBarTitleDisplayMode(.inline)
                 .toolbar { Button("Cancel") { dismiss() }.disabled(busy) }
                 .onAppear { frequency = store.profile?.frequencies.first ?? "daily" }
         }.interactiveDismissDisabled(busy)
     }
     private func create() async {
-        guard let target = validatedWebsite(url) else { return }; busy = true; defer { busy = false }
+        guard let target = validatedWebsite(url), let thresholdValue = monitorThresholdValue(threshold) else { return }; busy = true; defer { busy = false }
         do {
-            let _: Monitor = try await store.api.request("/api/watches", method: "POST", body: ["url": target.absoluteString, "label": label, "frequency": frequency, "device": device, "threshold": String(threshold), "notify_email": notify ? "1" : "0", "mode": "fullpage", "format": "png"])
+            let _: Monitor = try await store.api.request("/api/watches", method: "POST", body: ["url": target.absoluteString, "label": label, "frequency": frequency, "device": device, "threshold": String(thresholdValue), "notify_email": notify ? "1" : "0", "mode": "fullpage", "format": "png"])
             await store.refresh(); dismiss()
         } catch { self.error = error.localizedDescription }
     }
@@ -105,5 +105,84 @@ struct DeleteAccountView: View {
                 } }
             }
         }.interactiveDismissDisabled(busy)
+    }
+}
+
+
+// Accept the decimal separator offered by the user's keyboard; send a canonical number.
+func monitorThresholdValue(_ text: String) -> Double? {
+    guard let value = Double(text.trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: ",", with: ".")),
+          value.isFinite, (0.1...100).contains(value) else { return nil }
+    return value
+}
+struct MonitorThresholdFields: View {
+    @Binding var text: String
+    @State private var preset = "1"
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Picker("Visual alert threshold", selection: $preset) {
+                Text("Sensitive · 0.1%").tag("0.1")
+                Text("Balanced · 1%").tag("1")
+                Text("Major changes · 5%").tag("5")
+                Text("Custom").tag("custom")
+            }.pickerStyle(.menu)
+            if preset == "custom" {
+                HStack {
+                    TextField("Percentage", text: $text).keyboardType(.decimalPad).accessibilityLabel("Custom visual threshold")
+                    Text("%")
+                }
+            }
+            Text("Percentage of the compared image that must change before we notify you. Lower values can produce more alerts.")
+                .font(.footnote).foregroundStyle(.secondary)
+            Text("Applies only to visual rules. Page dimension changes also trigger an alert. Changes apply to future checks.")
+                .font(.footnote).foregroundStyle(.secondary)
+            if monitorThresholdValue(text) == nil {
+                Text("Enter a percentage from 0.1 to 100.").font(.footnote).foregroundStyle(.red)
+            }
+        }
+        .onAppear {
+            let value = monitorThresholdValue(text)
+            preset = value == 0.1 ? "0.1" : value == 1 ? "1" : value == 5 ? "5" : "custom"
+        }
+        .onChange(of: preset) { _, value in if value != "custom" { text = value } }
+    }
+}
+struct MonitorThresholdEditor: View {
+    @EnvironmentObject private var store: AppStore
+    @Environment(\.dismiss) private var dismiss
+    let monitorID: String
+    let onSaved: (Double) -> Void
+    @State private var text: String
+    @State private var busy = false
+    @State private var error: String?
+    init(monitorID: String, threshold: Double, onSaved: @escaping (Double) -> Void) {
+        self.monitorID = monitorID
+        self.onSaved = onSaved
+        _text = State(initialValue: String(threshold))
+    }
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section { MonitorThresholdFields(text: $text).disabled(busy) }
+                if let error { Section { Text(error).foregroundStyle(.red) } }
+                Section {
+                    Button { Task { await save() } } label: {
+                        HStack { if busy { ProgressView() }; Text(busy ? "Saving…" : "Save threshold") }
+                    }.disabled(busy || monitorThresholdValue(text) == nil)
+                }
+            }.navigationTitle("Change sensitivity").navigationBarTitleDisplayMode(.inline)
+                .toolbar { Button("Cancel") { dismiss() }.disabled(busy) }
+        }.interactiveDismissDisabled(busy)
+    }
+    private func save() async {
+        guard let value = monitorThresholdValue(text) else { return }
+        busy = true; error = nil; defer { busy = false }
+        do {
+            let updated: Monitor = try await store.api.request("/api/watches/\(monitorID)", method: "POST",
+                body: ["action": "threshold", "threshold": String(value)])
+            onSaved(updated.threshold ?? value)
+            await store.refresh()
+            dismiss()
+        } catch { self.error = error.localizedDescription }
     }
 }
