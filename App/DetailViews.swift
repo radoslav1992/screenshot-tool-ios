@@ -125,7 +125,7 @@ struct MonitorAlbumView: View {
                 HStack {
                     Text("Visual alert threshold")
                     Spacer()
-                    Text(threshold.formatted(.number.precision(.fractionLength(0...2))) + "%")
+                    Text(threshold == 0 ? "Any detected change" : threshold.formatted(.number.precision(.fractionLength(0...2))) + "%")
                     Image(systemName: "chevron.right")
                 }
             }.disabled(busy || !loaded)
@@ -135,7 +135,7 @@ struct MonitorAlbumView: View {
             if !loading && runs.isEmpty && error == nil { EmptyCard(symbol: "clock", title: "Waiting for the first check", detail: "Your first scheduled check establishes the baseline. Later checks can reveal changes.") }
             ForEach(runs.filter { !changedOnly || $0.changed == 1 }) { run in
                 VStack(alignment: .leading, spacing: 12) {
-                    HStack { Circle().fill(run.changed == 1 ? Palette.coral : Palette.blue).frame(width: 8, height: 8); Text(run.resultTitle).font(.headline); Spacer(); if let pct = run.change_pct { Text(pct.formatted(.number.precision(.fractionLength(0...2))) + "%").font(.caption.monospacedDigit()).foregroundStyle(Palette.coral) } }
+                    HStack { Circle().fill(run.changed == 1 ? Palette.coral : Palette.blue).frame(width: 8, height: 8); Text(run.resultTitle).font(.headline); Spacer(); if let pct = run.change_pct { Text(run.detail?.hasPrefix("<0.01%") == true ? "<0.01%" : pct.formatted(.number.precision(.fractionLength(0...2))) + "%").font(.caption.monospacedDigit()).foregroundStyle(Palette.coral) } }
                     Text(friendlyDate(run.created_at)).font(.caption).foregroundStyle(.secondary)
                     if let detail = run.detail, !detail.isEmpty {
                         Text(detail).font(.caption).foregroundStyle(.secondary)

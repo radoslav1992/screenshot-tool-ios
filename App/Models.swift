@@ -15,7 +15,7 @@ struct Monitor: Decodable, Identifiable {
     let id: String; let label: String; let url: String; let display_url: String
     let device: String; let frequency: String; let status: String
     let last_run_at: String?; let next_run_at: String; let last_change_pct: Double?; let last_error: String?
-    var threshold: Double? = nil
+    let threshold: Double?
     var title: String { label.isEmpty ? display_url : label }
 }
 struct Run: Decodable, Identifiable {
@@ -32,7 +32,7 @@ extension Run {
         return change_pct == nil ? "Check completed" : "No alert triggered"
     }
 }
-struct MonitorDetail: Decodable { let runs: [Run]; let status: String?; let frequency: String?; var threshold: Double? = nil }
+struct MonitorDetail: Decodable { let runs: [Run]; let status: String?; let frequency: String?; let threshold: Double? }
 struct APIProblem: Decodable { struct Detail: Decodable { let type: String; let message: String }; let error: Detail }
 struct APIError: LocalizedError { let status: Int; let message: String; var errorDescription: String? { message } }
 struct Acknowledgment: Decodable {}

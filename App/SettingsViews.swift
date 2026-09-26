@@ -112,7 +112,7 @@ struct DeleteAccountView: View {
 // Accept the decimal separator offered by the user's keyboard; send a canonical number.
 func monitorThresholdValue(_ text: String) -> Double? {
     guard let value = Double(text.trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: ",", with: ".")),
-          value.isFinite, (0.1...100).contains(value) else { return nil }
+          value.isFinite, (value == 0 || (0.1...100).contains(value)) else { return nil }
     return value
 }
 struct MonitorThresholdFields: View {
@@ -121,6 +121,7 @@ struct MonitorThresholdFields: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Picker("Visual alert threshold", selection: $preset) {
+                Text("Any detected change").tag("0")
                 Text("Sensitive · 0.1%").tag("0.1")
                 Text("Balanced · 1%").tag("1")
                 Text("Major changes · 5%").tag("5")
@@ -134,15 +135,19 @@ struct MonitorThresholdFields: View {
             }
             Text("Percentage of the compared image that must change before we notify you. Lower values can produce more alerts.")
                 .font(.footnote).foregroundStyle(.secondary)
+            if monitorThresholdValue(text) == 0 {
+                Text("Alerts for even tiny visual differences. May include minor rendering changes.")
+                    .font(.footnote).foregroundStyle(.secondary)
+            }
             Text("Applies only to visual rules. Page dimension changes also trigger an alert. Changes apply to future checks.")
                 .font(.footnote).foregroundStyle(.secondary)
             if monitorThresholdValue(text) == nil {
-                Text("Enter a percentage from 0.1 to 100.").font(.footnote).foregroundStyle(.red)
+                Text("Enter 0 for any detected change, or a percentage from 0.1 to 100.").font(.footnote).foregroundStyle(.red)
             }
         }
         .onAppear {
             let value = monitorThresholdValue(text)
-            preset = value == 0.1 ? "0.1" : value == 1 ? "1" : value == 5 ? "5" : "custom"
+            preset = value == 0 ? "0" : value == 0.1 ? "0.1" : value == 1 ? "1" : value == 5 ? "5" : "custom"
         }
         .onChange(of: preset) { _, value in if value != "custom" { text = value } }
     }
