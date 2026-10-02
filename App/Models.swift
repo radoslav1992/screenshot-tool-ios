@@ -56,7 +56,8 @@ extension APIProblem.Detail {
     var companionMessage: String {
         switch type {
         case "plan_required": return "This feature or schedule is not included in your current account plan."
-        case "watch_limit": return "You have reached your account’s monitor limit. Remove an existing monitor to create another."
+        // Sent when creating a monitor, and when resuming one after the account's plan changed.
+        case "watch_limit": return "You have reached your account’s monitor limit. Delete a monitor to make room for this one."
         default: return message
         }
     }
