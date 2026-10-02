@@ -76,6 +76,7 @@ struct AccountView: View {
             Card { VStack(alignment: .leading, spacing: 20) {
                 PushSettingsView()
                 Divider()
+                Link(destination: API.base.appendingPathComponent("app/account")) { Label("Change password on the website", systemImage: "key") }
                 Link(destination: API.base.appendingPathComponent("privacy")) { Label("Privacy policy", systemImage: "hand.raised") }
                 Link(destination: API.base.appendingPathComponent("terms")) { Label("Terms of service", systemImage: "doc.text") }
             } }

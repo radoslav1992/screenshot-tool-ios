@@ -70,6 +70,7 @@ struct WelcomeView: View {
                         HStack { if store.busy { ProgressView().tint(.white) }; Text(register ? "Create free account" : "Sign in"); Image(systemName: "arrow.right") }
                     }.buttonStyle(PrimaryButton()).disabled(store.busy || email.isEmpty || password.isEmpty || (register && password.count < 8))
                     Button(register ? "Already have an account? Sign in" : "New here? Create an account") { register.toggle() }.frame(maxWidth: .infinity)
+                    if !register { Link("Forgot password?", destination: API.base.appendingPathComponent("forgot-password")).font(.footnote).frame(maxWidth: .infinity) }
                     HStack { Link("Privacy", destination: API.base.appendingPathComponent("privacy")); Text("·"); Link("Terms", destination: API.base.appendingPathComponent("terms")) }.font(.footnote).frame(maxWidth: .infinity)
                 }
             }.padding(24).frame(maxWidth: 560)
