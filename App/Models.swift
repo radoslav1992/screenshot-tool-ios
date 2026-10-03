@@ -37,6 +37,17 @@ struct APIProblem: Decodable { struct Detail: Decodable { let type: String; let 
 struct APIError: LocalizedError { let status: Int; let message: String; var errorDescription: String? { message } }
 struct Acknowledgment: Decodable {}
 
+/// How a monitor schedule reads. Ids the app does not know yet (the server may add one) fall back to the id itself.
+func frequencyLabel(_ id: String) -> String {
+    switch id {
+    case "quarter-hourly": return "Every 15 minutes"
+    case "hourly": return "Hourly"
+    case "daily": return "Daily"
+    case "weekly": return "Weekly"
+    default: return id.replacingOccurrences(of: "-", with: " ").capitalized
+    }
+}
+
 func friendlyDate(_ raw: String) -> String {
     let formatter = ISO8601DateFormatter()
     formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]

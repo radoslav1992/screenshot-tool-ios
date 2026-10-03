@@ -88,7 +88,7 @@ struct MonitorsView: View {
                     Text(monitor.title).font(.title3.bold()).lineLimit(2)
                     Text(monitor.display_url).font(.subheadline).foregroundStyle(.secondary).lineLimit(1)
                     Divider()
-                    HStack { Text(monitor.frequency.capitalized); Spacer(); Text("Open album"); Image(systemName: "arrow.up.right") }.font(.caption.bold()).foregroundStyle(Palette.blue)
+                    HStack { Text(frequencyLabel(monitor.frequency)); Spacer(); Text("Open album"); Image(systemName: "arrow.up.right") }.font(.caption.bold()).foregroundStyle(Palette.blue)
                     if let error = monitor.last_error { Text(error).font(.caption).foregroundStyle(.orange) }
                 } }
             }.buttonStyle(.plain) }
@@ -117,8 +117,8 @@ struct MonitorAlbumView: View {
                 Spacer(); Button("Check now") { showRun = true }
             }.buttonStyle(.bordered).disabled(busy || !loaded)
             if let frequencies = store.profile?.frequencies, !frequencies.isEmpty {
-                HStack { Text("Schedule"); Spacer(); Menu(frequency.capitalized) {
-                    ForEach(frequencies, id: \.self) { value in Button(value.capitalized) { Task { await action("schedule", newFrequency: value) } } }
+                HStack { Text("Schedule"); Spacer(); Menu(frequencyLabel(frequency)) {
+                    ForEach(frequencies, id: \.self) { value in Button(frequencyLabel(value)) { Task { await action("schedule", newFrequency: value) } } }
                 }.disabled(busy || !loaded) }
             }
             Button { editThreshold = true } label: {

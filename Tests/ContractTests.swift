@@ -56,4 +56,10 @@ final class ContractTests: XCTestCase {
         let detail = try JSONDecoder().decode(MonitorDetail.self, from: data)
         XCTAssertNil(detail.runs.first?.baseline_capture_id)
     }
+    func testScheduleLabelsReadNaturallyIncludingNewOnes() {
+        XCTAssertEqual(frequencyLabel("quarter-hourly"), "Every 15 minutes")
+        XCTAssertEqual(frequencyLabel("daily"), "Daily")
+        // A schedule added on the server later still reads as words, not an id.
+        XCTAssertEqual(frequencyLabel("twice-daily"), "Twice Daily")
+    }
 }

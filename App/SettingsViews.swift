@@ -17,7 +17,7 @@ struct MonitorComposer: View {
                 }
                 Section("The rhythm") {
                     if let frequencies = store.profile?.frequencies, !frequencies.isEmpty {
-                        Picker("Check", selection: $frequency) { ForEach(frequencies, id: \.self) { Text($0.capitalized).tag($0) } }
+                        Picker("Check", selection: $frequency) { ForEach(frequencies, id: \.self) { Text(frequencyLabel($0)).tag($0) } }
                     } else { Text("Your current plan does not include scheduled monitors.").foregroundStyle(.secondary) }
                     MonitorThresholdFields(text: $threshold)
                     Toggle("Email me when a change is found", isOn: $notify)
