@@ -62,4 +62,15 @@ final class ContractTests: XCTestCase {
         // A schedule added on the server later still reads as words, not an id.
         XCTAssertEqual(frequencyLabel("twice-daily"), "Twice Daily")
     }
+    func testProfileDecodesOptionalReferralLinkAndBonus() throws {
+        let data = Data(#"{"user":{"id":"usr_1","email":"a@b.co","name":"A"},"plan":"free","verified":true,"usage":{"used":3,"quota":20,"remaining":117,"renewsOn":"2026-11-01","bonus":100},"frequencies":["weekly"],"referral_url":"https://easyscreencapture.com/join/abcd1234"}"#.utf8)
+        let profile = try JSONDecoder().decode(Profile.self, from: data)
+        XCTAssertEqual(profile.usage.bonus, 100)
+        XCTAssertEqual(profile.referral_url, "https://easyscreencapture.com/join/abcd1234")
+        // Older backends send neither; the profile still decodes.
+        let plain = Data(#"{"user":{"id":"usr_1","email":"a@b.co","name":"A"},"plan":"free","verified":true,"usage":{"used":3,"quota":20,"remaining":17,"renewsOn":"2026-11-01"},"frequencies":[]}"#.utf8)
+        let old = try JSONDecoder().decode(Profile.self, from: plain)
+        XCTAssertNil(old.usage.bonus)
+        XCTAssertNil(old.referral_url)
+    }
 }

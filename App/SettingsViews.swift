@@ -57,6 +57,7 @@ struct AccountView: View {
                     Text("\(profile.usage.remaining) captures remaining").font(.headline)
                     ProgressView(value: Double(min(profile.usage.used, profile.usage.quota)), total: Double(max(1, profile.usage.quota))).tint(Palette.blue)
                     Text("\(profile.usage.used) of \(profile.usage.quota) used · Resets \(profile.usage.renewsOn)").font(.caption).foregroundStyle(.secondary)
+                    if let bonus = profile.usage.bonus, bonus > 0 { Text("Includes \(bonus) bonus screenshots, used after your monthly allowance.").font(.caption).foregroundStyle(.secondary) }
                     Text("Your account and allowance stay in sync across devices.").font(.subheadline).foregroundStyle(.secondary)
                 } }
                 if !profile.verified { Card {
@@ -67,6 +68,11 @@ struct AccountView: View {
                         do { let _: Acknowledgment = try await store.api.request("/api/auth/resend-verification", method: "POST", body: [:]); message = "Verification email requested. Check your inbox." } catch { store.error = error.localizedDescription }
                     } }.disabled(busy)
                 } }
+                if let invite = profile.referral_url.flatMap(URL.init(string:)) { Card { VStack(alignment: .leading, spacing: 12) {
+                    Text("Invite a friend").font(.headline)
+                    Text("When someone signs up through your link, confirms their email and takes a first capture, you each get 100 bonus screenshots.").font(.subheadline).foregroundStyle(.secondary)
+                    ShareLink(item: invite, subject: Text("Easy Screen Capture"), message: Text("Website screenshots and change monitoring. Sign up through my link and we both get 100 bonus screenshots.")) { Label("Share your invite link", systemImage: "gift") }
+                } } }
             } else { EmptyCard(symbol: "person.crop.circle", title: "Account details unavailable", detail: "Pull down to reconnect and load your plan.") }
             if purchases.configuration?.available == true {
                 Button(purchases.configuration?.canPurchase == true ? "Explore Lite" : "Lite · Purchases & restoration") { showPlans = true }
