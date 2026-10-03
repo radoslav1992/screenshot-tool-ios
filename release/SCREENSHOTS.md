@@ -17,6 +17,7 @@ Apple's current specifications: https://developer.apple.com/help/app-store-conne
 | 03-monitors.png | Monitor albums with meaningful labels | A home for every website you follow. |
 | 04-history.png | A monitor's recent changed and unchanged checks | See what changed over time. |
 | 05-comparison.png | Before/after view with a real visible change | Review the difference. |
+| 06-alert.png | A real push alert for a monitor change (Notification Center or lock screen; capture it on a device, not the simulator) | Know the moment a page changes. |
 
 The raw screenshots are suitable to upload if their sizes are accepted. Headlines are optional design copy, not instructions to alter the app UI. Avoid personal account screens, real customer content, loading spinners, failed checks and keyboards obscuring the feature. Use accurate sample content you own.
 

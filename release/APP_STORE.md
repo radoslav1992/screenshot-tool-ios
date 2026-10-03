@@ -1,13 +1,13 @@
 # App Store submission pack — version 1.0.0
 
-Prepared against iOS b626807 and backend 036b409 on 18 September 2026. These are ready-to-copy drafts, not an App Store submission. Signing, live APNs, real account testing, final screenshots and owner declarations remain release gates.
+Prepared against iOS b626807 and backend 036b409 on 18 September 2026; listing copy, keywords and plan details updated on 3 October 2026 for the new monitor allowances (Free and Lite now include monitors). These are ready-to-copy drafts, not an App Store submission. Signing, live APNs, real account testing, final screenshots and owner declarations remain release gates.
 
 ## App information
 
 | Field | Value |
 | --- | --- |
 | Name | Easy Screen Capture |
-| Subtitle | Website captures & monitoring |
+| Subtitle | Website screenshots & monitors (30 characters, the limit) |
 | Primary language | English (U.S.) |
 | Primary category | Productivity |
 | Secondary category | Utilities |
@@ -23,11 +23,13 @@ Confirm name availability. Support and updated privacy pages must be deployed an
 
 ## Promotional text
 
-Capture websites, keep a clear visual history, and review monitored changes from your iPhone or iPad. Your saved captures stay connected to your account.
+Capture any website as a full-page screenshot, watch the pages that matter and get a push alert when they change. Free accounts include 3 monitored pages.
 
 ## Keywords
 
-website,screenshot,monitor,compare,changes,archive,webpage,visual,history,design,review
+full page,webpage,changes,alert,compare,seo,archive,tracker,visual,diff,client,review,agency,proof
+
+98 of 100 characters. Apple already indexes the words in the name and subtitle (easy, screen, capture, website, screenshots, monitors), so they are not repeated here; repeating them wastes space without ranking higher.
 
 ## Description
 
@@ -53,7 +55,7 @@ Save selected captures to Photos or share them using the iOS share sheet. From S
 CONNECTED TO YOUR ACCOUNT
 Sign in with your Easy Screen Capture account or create one in the app. Captures, monitors, and your account allowance stay in sync with the web service.
 
-An account and internet connection are required. Capture allowances, retention, monitoring access, and available schedules depend on your account plan. Scheduled checks use your capture allowance. The first monitor check establishes a baseline; later qualifying changes can trigger alerts.
+An account and internet connection are required. Free accounts include 20 screenshots a month and 3 monitored pages checked weekly. Capture allowances, retention, the number of monitors and available schedules depend on your account plan. Each scheduled visual check uses one screenshot from your allowance. The first monitor check establishes a baseline; later qualifying changes can trigger alerts.
 
 ## TestFlight: What to Test
 
@@ -71,7 +73,7 @@ Notifications are optional. Open You > Push notifications > Enable change alerts
 
 Safari extension: open a webpage in Safari, choose Share > Easy Capture, save the URL, and open the main app to review settings and capture it.
 
-Account deletion is available under You > Delete my account, with password confirmation. This permanently deletes the account and its captures. Optional Lite subscriptions are available through Apple under You > Explore Lite. Lite provides 500 screenshots per calendar month, no watermark, and 30-day cloud history; monitoring is not included. Restore purchases and Manage Apple subscription are on the Lite screen. New free accounts receive 20 screenshots each calendar month; existing free accounts retain their allowance. Apple subscriptions must be canceled separately before account deletion. The backend will remain available throughout review.
+Account deletion is available under You > Delete my account, with password confirmation. This permanently deletes the account and its captures. Optional Lite subscriptions are available through Apple under You > Explore Lite. Lite provides 500 screenshots per calendar month, no watermark, 30-day cloud history and up to 10 monitored pages checked daily or weekly. Restore purchases and Manage Apple subscription are on the Lite screen. New free accounts receive 20 screenshots each calendar month and up to 3 monitored pages checked weekly; existing free accounts retain their allowance. Apple subscriptions must be canceled separately before account deletion. The backend will remain available throughout review.
 
 ## Owner fields — enter only in App Store Connect
 
@@ -92,4 +94,4 @@ Screenshot instructions: [SCREENSHOTS.md](SCREENSHOTS.md).
 
 ## Lite purchase disclosure
 
-Optional Lite subscriptions provide 500 screenshots per calendar month, no watermark and 30-day cloud history. Allowances reset on the first of each month in UTC with no rollover. Payment is charged to your Apple Account; subscriptions renew automatically unless canceled at least 24 hours before renewal. Manage subscriptions in Apple Account settings. Terms of Use: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+Optional Lite subscriptions provide 500 screenshots per calendar month, no watermark, 30-day cloud history and up to 10 monitored pages checked daily or weekly. Allowances reset on the first of each month in UTC with no rollover. Payment is charged to your Apple Account; subscriptions renew automatically unless canceled at least 24 hours before renewal. Manage subscriptions in Apple Account settings. Terms of Use: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
